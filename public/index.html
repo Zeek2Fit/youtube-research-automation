@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Research Automation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.8;
+            font-size: 1.1em;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .card h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #667eea;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+            margin-right: 10px;
+        }
+        
+        .btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .status {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .transcript-viewer {
+            grid-column: 1 / -1;
+            margin-top: 20px;
+        }
+        
+        .transcript-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+        }
+        
+        .transcript-item {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .transcript-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .transcript-item h4 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .transcript-item p {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .transcript-content {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 YouTube Research Automation</h1>
+            <p>Manage your competitor research workflow and access generated content</p>
+            <div style="margin-top: 15px;">
+                <a href="/transcripts.html" style="color: #fff; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; text-decoration: none; font-size: 0.9em;">📺 View All Transcripts</a>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- Settings Panel -->
+            <div class="card">
+                <h2>⚙️ Settings</h2>
+                
+                <div id="status-message" class="hidden"></div>
+                
+                <form id="settings-form">
+                    <div class="form-group">
+                        <label for="mode-toggle">Automation Mode</label>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <span>Manual</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="mode-toggle">
+                                <span class="slider"></span>
+                            </label>
+                            <span>Auto</span>
+                        </div>
+                        <small style="color: #666; font-size: 12px;">Auto mode runs daily at your scheduled time</small>
+                    </div>
+                    
+                    <div class="form-group" id="schedule-group">
+                        <label for="schedule">Schedule (Cron Expression)</label>
+                        <input type="text" id="schedule" placeholder="0 9 * * *" value="0 9 * * *">
+                        <small style="color: #666; font-size: 12px;">Daily at 9 AM (0 9 * * *)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="timezone">Timezone</label>
+                        <select id="timezone">
+                            <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                            <option value="America/New_York">Eastern Time (ET)</option>
+                            <option value="America/Chicago">Central Time (CT)</option>
+                            <option value="America/Denver">Mountain Time (MT)</option>
+                            <option value="UTC">UTC</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="video-urls">YouTube Video URLs</label>
+                        <textarea id="video-urls" rows="4" placeholder="Enter YouTube video URLs, one per line"></textarea>
+                        <small style="color: #666; font-size: 12px;">Individual video URLs work best for content analysis</small>
+                    </div>
+                    
+                    <button type="submit" class="btn">💾 Save Settings</button>
+                    <button type="button" id="run-now" class="btn btn-success">▶️ Run Now</button>
+                </form>
+            </div>
+            
+            <!-- Control Panel -->
+            <div class="card">
+                <h2>🎮 Control Panel</h2>
+                
+                <div class="form-group">
+                    <label>Workflow Status</label>
+                    <div id="workflow-status" class="status info">
+                        Loading status...
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Quick Actions</label>
+                    <button type="button" id="test-connection" class="btn btn-secondary">🔌 Test Connection</button>
+                    <button type="button" id="view-logs" class="btn btn-secondary">📋 View Logs</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>Last Run Results</label>
+                    <div id="last-run" class="status info">
+                        No recent runs found
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Database</label>
+                    <button type="button" id="refresh-data" class="btn btn-secondary">🔄 Refresh Data</button>
+                    <button type="button" id="export-data" class="btn btn-secondary">📁 Export All</button>
+                </div>
+            </div>
+            
+            <!-- Transcript Viewer -->
+            <div class="card transcript-viewer">
+                <h2>📄 Transcript Viewer</h2>
+                
+                <div class="form-group">
+                    <button type="button" id="load-transcripts" class="btn">📚 Load Transcripts</button>
+                    <input type="text" id="search-transcripts" placeholder="Search transcripts..." style="width: 300px; margin-left: 10px;">
+                </div>
+                
+                <div id="transcript-list" class="transcript-list hidden">
+                    <div class="loading">Loading transcripts...</div>
+                </div>
+                
+                <div id="transcript-content" class="transcript-content hidden">
+                    <button type="button" id="copy-transcript" class="btn" style="margin-bottom: 10px;">📋 Copy Transcript</button>
+                    <div id="transcript-text"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // State management
+        let currentSettings = {};
+        let transcripts = [];
+        let selectedTranscript = null;
+        
+        // DOM Elements
+        const settingsForm = document.getElementById('settings-form');
+        const statusMessage = document.getElementById('status-message');
+        const modeToggle = document.getElementById('mode-toggle');
+        const scheduleGroup = document.getElementById('schedule-group');
+        const runNowBtn = document.getElementById('run-now');
+        const workflowStatus = document.getElementById('workflow-status');
+        const lastRun = document.getElementById('last-run');
+        const transcriptList = document.getElementById('transcript-list');
+        const transcriptContent = document.getElementById('transcript-content');
+        const transcriptText = document.getElementById('transcript-text');
+        const copyTranscriptBtn = document.getElementById('copy-transcript');
+        const searchInput = document.getElementById('search-transcripts');
+        
+        // Utility functions
+        function showMessage(message, type = 'info') {
+            statusMessage.className = `status ${type}`;
+            statusMessage.textContent = message;
+            statusMessage.classList.remove('hidden');
+            setTimeout(() => statusMessage.classList.add('hidden'), 5000);
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString || dateString === 'null') return 'Never';
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return 'Never';
+            return date.toLocaleString();
+        }
+        
+        // API functions
+        async function apiCall(endpoint, options = {}) {
+            try {
+                const response = await fetch(`/api/${endpoint}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API call failed:', error);
+                showMessage(`Error: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        // Settings management
+        async function loadSettings() {
+            try {
+                const settings = await apiCall('settings');
+                currentSettings = settings;
+                
+                // Update UI
+                modeToggle.checked = settings.autoMode || false;
+                document.getElementById('schedule').value = settings.schedule || '0 9 * * *';
+                document.getElementById('timezone').value = settings.timezone || 'America/Los_Angeles';
+                document.getElementById('video-urls').value = (settings.videoUrls || []).join('\n');
+                
+                updateScheduleVisibility();
+                showMessage('Settings loaded successfully', 'success');
+            } catch (error) {
+                showMessage('Failed to load settings', 'error');
+            }
+        }
+        
+        async function saveSettings() {
+            const settings = {
+                autoMode: modeToggle.checked,
+                schedule: document.getElementById('schedule').value,
+                timezone: document.getElementById('timezone').value,
+                videoUrls: document.getElementById('video-urls').value.split('\n').filter(url => url.trim())
+            };
+            
+            try {
+                await apiCall('settings', {
+                    method: 'POST',
+                    body: JSON.stringify(settings)
+                });
+                
+                currentSettings = settings;
+                showMessage('Settings saved successfully', 'success');
+                await updateStatus();
+            } catch (error) {
+                showMessage('Failed to save settings', 'error');
+            }
+        }
+        
+        function updateScheduleVisibility() {
+            scheduleGroup.style.display = modeToggle.checked ? 'block' : 'none';
+        }
+        
+        // Workflow management
+        async function runWorkflow() {
+            try {
+                showMessage('Starting workflow...', 'info');
+                
+                // Get video URLs from the text area
+                const videoUrls = document.getElementById('video-urls').value
+                    .split('\n')
+                    .map(url => url.trim())
+                    .filter(url => url.length > 0);
+                
+                const result = await apiCall('workflow/run', { 
+                    method: 'POST',
+                    body: JSON.stringify({ videoUrls })
+                });
+                
+                showMessage(`Workflow started with ${result.urlsUsed || 0} URLs`, 'success');
+                await updateStatus();
+            } catch (error) {
+                showMessage('Failed to start workflow', 'error');
+            }
+        }
+        
+        async function updateStatus() {
+            try {
+                const status = await apiCall('status');
+                
+                // Update workflow status
+                workflowStatus.textContent = `Mode: ${status.autoMode ? 'Auto' : 'Manual'} | Status: ${status.workflowStatus || 'Unknown'}`;
+                workflowStatus.className = `status ${status.workflowStatus === 'running' ? 'info' : 'success'}`;
+                
+                // Update last run
+                if (status.lastRun) {
+                    lastRun.textContent = `Last run: ${formatDate(status.lastRun.timestamp)} | Status: ${status.lastRun.status}`;
+                    lastRun.className = `status ${status.lastRun.status === 'success' ? 'success' : 'error'}`;
+                } else {
+                    lastRun.textContent = 'No recent runs found';
+                    lastRun.className = 'status info';
+                }
+            } catch (error) {
+                workflowStatus.textContent = 'Failed to load status';
+                workflowStatus.className = 'status error';
+            }
+        }
+        
+        // Transcript management
+        async function loadTranscripts() {
+            try {
+                document.querySelector('.transcript-list .loading').textContent = 'Loading transcripts...';
+                transcriptList.classList.remove('hidden');
+                
+                transcripts = await apiCall('transcripts');
+                renderTranscripts();
+                showMessage('Transcripts loaded successfully', 'success');
+            } catch (error) {
+                document.querySelector('.transcript-list .loading').textContent = 'Failed to load transcripts';
+                showMessage('Failed to load transcripts', 'error');
+            }
+        }
+        
+        function renderTranscripts(filter = '') {
+            const filteredTranscripts = transcripts.filter(t => 
+                t.title.toLowerCase().includes(filter.toLowerCase()) ||
+                t.channelName.toLowerCase().includes(filter.toLowerCase())
+            );
+            
+            transcriptList.innerHTML = filteredTranscripts.length > 0 
+                ? filteredTranscripts.map(transcript => `
+                    <div class="transcript-item" onclick="selectTranscript('${transcript.videoId}')">
+                        <h4>${transcript.title}</h4>
+                        <p>${transcript.channelName} • ${formatDate(transcript.scrapedAt)}</p>
+                    </div>
+                `).join('')
+                : '<div class="loading">No transcripts found</div>';
+        }
+        
+        function selectTranscript(videoId) {
+            selectedTranscript = transcripts.find(t => t.videoId === videoId);
+            if (selectedTranscript) {
+                transcriptText.textContent = selectedTranscript.transcript;
+                transcriptContent.classList.remove('hidden');
+            }
+        }
+        
+        function copyTranscript() {
+            if (selectedTranscript) {
+                navigator.clipboard.writeText(selectedTranscript.transcript).then(() => {
+                    showMessage('Transcript copied to clipboard', 'success');
+                }).catch(() => {
+                    showMessage('Failed to copy transcript', 'error');
+                });
+            }
+        }
+        
+        // Event listeners
+        settingsForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveSettings();
+        });
+        
+        modeToggle.addEventListener('change', updateScheduleVisibility);
+        runNowBtn.addEventListener('click', runWorkflow);
+        
+        document.getElementById('test-connection').addEventListener('click', async () => {
+            try {
+                // Test API connection
+                await apiCall('status');
+                showMessage('✅ Connection test successful', 'success');
+            } catch (error) {
+                showMessage('❌ Connection test failed', 'error');
+            }
+        });
+        
+        document.getElementById('load-transcripts').addEventListener('click', loadTranscripts);
+        copyTranscriptBtn.addEventListener('click', copyTranscript);
+        
+        document.getElementById('view-logs').addEventListener('click', async () => {
+            try {
+                // Open logs in a new window/tab
+                const logsWindow = window.open('', '_blank', 'width=900,height=700');
+                logsWindow.document.write(`
+                    <html>
+                        <head>
+                            <title>Workflow Logs</title>
+                            <style>
+                                body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #fff; }
+                                pre { white-space: pre-wrap; word-wrap: break-word; line-height: 1.4; }
+                                h2 { color: #4CAF50; }
+                            </style>
+                        </head>
+                        <body>
+                            <h2>🔍 Workflow Logs</h2>
+                            <div id="logs">Fetching logs...</div>
+                        </body>
+                    </html>
+                `);
+                
+                // Fetch and display logs
+                const logs = await fetch('/api/logs').then(r => r.text()).catch(() => 'Could not fetch logs');
+                logsWindow.document.getElementById('logs').innerHTML = `<pre>${logs}</pre>`;
+                
+                showMessage('Logs opened in new window', 'success');
+            } catch (error) {
+                showMessage('Failed to open logs', 'error');
+            }
+        });
+        
+        searchInput.addEventListener('input', (e) => {
+            if (transcripts.length > 0) {
+                renderTranscripts(e.target.value);
+            }
+        });
+        
+        // Add missing button handlers
+        document.getElementById('refresh-data').addEventListener('click', async () => {
+            try {
+                showMessage('🔄 Refreshing data...', 'info');
+                await updateStatus();
+                await loadTranscripts();
+                showMessage('✅ Data refreshed successfully', 'success');
+            } catch (error) {
+                showMessage('❌ Failed to refresh data', 'error');
+            }
+        });
+        
+        document.getElementById('export-all').addEventListener('click', async () => {
+            try {
+                showMessage('📥 Preparing export...', 'info');
+                
+                // Get all data for export
+                const [statusData, transcriptData] = await Promise.all([
+                    apiCall('status'),
+                    apiCall('transcripts')
+                ]);
+                
+                const exportData = {
+                    exportDate: new Date().toISOString(),
+                    status: statusData,
+                    transcripts: transcriptData,
+                    totalVideos: transcriptData.length
+                };
+                
+                // Create and download JSON file
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `youtube-automation-export-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showMessage('✅ Export completed successfully', 'success');
+            } catch (error) {
+                showMessage('❌ Export failed', 'error');
+            }
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            updateStatus();
+            updateScheduleVisibility();
+            
+            // Refresh status every 30 seconds
+            setInterval(updateStatus, 30000);
+        });
+    </script>
+</body>
+</html>

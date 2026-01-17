@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Transcripts - TubeAutomator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .transcripts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .transcript-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+
+        .transcript-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .transcript-card.selected {
+            border: 2px solid #667eea;
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .card-header {
+            margin-bottom: 15px;
+        }
+
+        .video-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .video-meta {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .channel-name {
+            font-weight: 500;
+        }
+
+        .scraped-date {
+            font-size: 0.8em;
+        }
+
+        .transcript-preview {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            max-height: 150px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .transcript-text {
+            font-size: 0.9em;
+            line-height: 1.5;
+            color: #495057;
+        }
+
+        .transcript-preview::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(transparent, #f8f9fa);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        .stats {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .no-transcripts {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+
+        .no-transcripts h3 {
+            margin-bottom: 10px;
+        }
+
+        .bulk-actions {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .bulk-actions.hidden {
+            display: none;
+        }
+
+        .selection-info {
+            color: #495057;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">← Back to Dashboard</a>
+        
+        <header>
+            <h1>📺 YouTube Transcripts</h1>
+            <p class="subtitle">View, search, and manage all your scraped video transcripts</p>
+        </header>
+
+        <div id="status-message" class="status hidden"></div>
+
+        <div class="stats">
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-number" id="total-transcripts">0</div>
+                    <div class="stat-label">Total Transcripts</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="selected-count">0</div>
+                    <div class="stat-label">Selected</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="total-words">0</div>
+                    <div class="stat-label">Total Words</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="controls-row">
+                <input type="text" id="search-input" class="search-box" placeholder="🔍 Search transcripts by title, channel, or content...">
+                <button id="load-btn" class="btn btn-primary">📥 Load Transcripts</button>
+                <button id="select-all-btn" class="btn btn-secondary">☑️ Select All</button>
+                <button id="clear-selection-btn" class="btn btn-secondary">❌ Clear Selection</button>
+            </div>
+        </div>
+
+        <div id="bulk-actions" class="bulk-actions hidden">
+            <div class="selection-info" id="selection-info">0 transcripts selected</div>
+            <div class="controls-row">
+                <button id="export-selected-btn" class="btn btn-success">📁 Export Selected</button>
+                <button id="copy-selected-btn" class="btn btn-success">📋 Copy Selected</button>
+                <button id="download-selected-btn" class="btn btn-success">💾 Download Selected</button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading hidden">
+            <h3>Loading transcripts...</h3>
+            <p>Please wait while we fetch your video transcripts.</p>
+        </div>
+
+        <div id="no-transcripts" class="no-transcripts hidden">
+            <h3>No transcripts found</h3>
+            <p>Run some workflows to scrape YouTube videos and generate transcripts.</p>
+            <a href="/" class="btn btn-primary" style="margin-top: 20px;">← Back to Dashboard</a>
+        </div>
+
+        <div id="transcripts-container" class="transcripts-grid"></div>
+    </div>
+
+    <script>
+        // State management
+        let transcripts = [];
+        let selectedTranscripts = new Set();
+        let filteredTranscripts = [];
+
+        // DOM elements
+        const statusMessage = document.getElementById('status-message');
+        const totalTranscriptsEl = document.getElementById('total-transcripts');
+        const selectedCountEl = document.getElementById('selected-count');
+        const totalWordsEl = document.getElementById('total-words');
+        const searchInput = document.getElementById('search-input');
+        const loadBtn = document.getElementById('load-btn');
+        const selectAllBtn = document.getElementById('select-all-btn');
+        const clearSelectionBtn = document.getElementById('clear-selection-btn');
+        const bulkActions = document.getElementById('bulk-actions');
+        const selectionInfo = document.getElementById('selection-info');
+        const exportSelectedBtn = document.getElementById('export-selected-btn');
+        const copySelectedBtn = document.getElementById('copy-selected-btn');
+        const downloadSelectedBtn = document.getElementById('download-selected-btn');
+        const loading = document.getElementById('loading');
+        const noTranscripts = document.getElementById('no-transcripts');
+        const transcriptsContainer = document.getElementById('transcripts-container');
+
+        // Utility functions
+        function showMessage(message, type = 'info') {
+            statusMessage.className = `status ${type}`;
+            statusMessage.textContent = message;
+            statusMessage.classList.remove('hidden');
+            setTimeout(() => statusMessage.classList.add('hidden'), 5000);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString || dateString === 'null') return 'Never';
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return 'Never';
+            return date.toLocaleDateString();
+        }
+
+        function truncateText(text, maxLength = 300) {
+            if (!text || text.length <= maxLength) return text || '';
+            return text.substring(0, maxLength) + '...';
+        }
+
+        function countWords(text) {
+            return text ? text.trim().split(/\s+/).length : 0;
+        }
+
+        // API functions
+        async function apiCall(endpoint, options = {}) {
+            try {
+                const response = await fetch(`/api/${endpoint}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API call failed:', error);
+                showMessage(`Error: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
+        // Main functions
+        async function loadTranscripts() {
+            try {
+                loading.classList.remove('hidden');
+                noTranscripts.classList.add('hidden');
+                transcriptsContainer.innerHTML = '';
+                
+                transcripts = await apiCall('transcripts');
+                
+                loading.classList.add('hidden');
+                
+                if (transcripts.length === 0) {
+                    noTranscripts.classList.remove('hidden');
+                    return;
+                }
+                
+                filteredTranscripts = [...transcripts];
+                renderTranscripts();
+                updateStats();
+                showMessage(`Loaded ${transcripts.length} transcripts`, 'success');
+            } catch (error) {
+                loading.classList.add('hidden');
+                noTranscripts.classList.remove('hidden');
+                showMessage('Failed to load transcripts', 'error');
+            }
+        }
+
+        function renderTranscripts(filter = '') {
+            if (filter) {
+                filteredTranscripts = transcripts.filter(t => 
+                    t.title?.toLowerCase().includes(filter.toLowerCase()) ||
+                    t.channelName?.toLowerCase().includes(filter.toLowerCase()) ||
+                    t.transcript?.toLowerCase().includes(filter.toLowerCase())
+                );
+            } else {
+                filteredTranscripts = [...transcripts];
+            }
+
+            transcriptsContainer.innerHTML = '';
+            
+            if (filteredTranscripts.length === 0) {
+                transcriptsContainer.innerHTML = '<div class="no-transcripts"><h3>No matching transcripts found</h3><p>Try adjusting your search terms.</p></div>';
+                return;
+            }
+
+            filteredTranscripts.forEach(transcript => {
+                const card = document.createElement('div');
+                card.className = 'transcript-card';
+                card.dataset.videoId = transcript.videoId || transcript.video_id;
+                
+                if (selectedTranscripts.has(transcript.videoId || transcript.video_id)) {
+                    card.classList.add('selected');
+                }
+
+                card.innerHTML = `
+                    <div class="card-header">
+                        <h3 class="video-title">${transcript.title || 'Untitled Video'}</h3>
+                        <div class="video-meta">
+                            <span class="channel-name">${transcript.channelName || transcript.channel_name || 'Unknown Channel'}</span>
+                            <span class="scraped-date">${formatDate(transcript.scrapedAt || transcript.scraped_at)}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="transcript-preview">
+                        <div class="transcript-text">${truncateText(transcript.transcript)}</div>
+                    </div>
+                    
+                    <div class="card-actions">
+                        <button class="btn btn-primary btn-small select-btn">
+                            ${selectedTranscripts.has(transcript.videoId || transcript.video_id) ? '☑️ Selected' : '☐ Select'}
+                        </button>
+                        <button class="btn btn-secondary btn-small copy-btn">📋 Copy</button>
+                        <button class="btn btn-secondary btn-small view-btn">👁️ View Full</button>
+                        <button class="btn btn-success btn-small download-btn">💾 Download</button>
+                    </div>
+                `;
+
+                // Add event listeners
+                const selectBtn = card.querySelector('.select-btn');
+                const copyBtn = card.querySelector('.copy-btn');
+                const viewBtn = card.querySelector('.view-btn');
+                const downloadBtn = card.querySelector('.download-btn');
+
+                selectBtn.addEventListener('click', () => toggleSelection(transcript, card, selectBtn));
+                copyBtn.addEventListener('click', () => copyTranscript(transcript));
+                viewBtn.addEventListener('click', () => viewFullTranscript(transcript));
+                downloadBtn.addEventListener('click', () => downloadTranscript(transcript));
+
+                transcriptsContainer.appendChild(card);
+            });
+        }
+
+        function toggleSelection(transcript, card, button) {
+            const videoId = transcript.videoId || transcript.video_id;
+            
+            if (selectedTranscripts.has(videoId)) {
+                selectedTranscripts.delete(videoId);
+                card.classList.remove('selected');
+                button.innerHTML = '☐ Select';
+            } else {
+                selectedTranscripts.add(videoId);
+                card.classList.add('selected');
+                button.innerHTML = '☑️ Selected';
+            }
+            
+            updateSelection();
+        }
+
+        function updateSelection() {
+            selectedCountEl.textContent = selectedTranscripts.size;
+            selectionInfo.textContent = `${selectedTranscripts.size} transcript${selectedTranscripts.size !== 1 ? 's' : ''} selected`;
+            
+            if (selectedTranscripts.size > 0) {
+                bulkActions.classList.remove('hidden');
+            } else {
+                bulkActions.classList.add('hidden');
+            }
+        }
+
+        function updateStats() {
+            totalTranscriptsEl.textContent = transcripts.length;
+            
+            const totalWords = transcripts.reduce((sum, t) => sum + countWords(t.transcript), 0);
+            totalWordsEl.textContent = totalWords.toLocaleString();
+        }
+
+        function selectAll() {
+            selectedTranscripts.clear();
+            filteredTranscripts.forEach(t => selectedTranscripts.add(t.videoId || t.video_id));
+            renderTranscripts(searchInput.value);
+            updateSelection();
+        }
+
+        function clearSelection() {
+            selectedTranscripts.clear();
+            renderTranscripts(searchInput.value);
+            updateSelection();
+        }
+
+        // Action functions
+        function copyTranscript(transcript) {
+            navigator.clipboard.writeText(transcript.transcript || '').then(() => {
+                showMessage('Transcript copied to clipboard', 'success');
+            }).catch(() => {
+                showMessage('Failed to copy transcript', 'error');
+            });
+        }
+
+        function viewFullTranscript(transcript) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.8); z-index: 1000; display: flex; 
+                align-items: center; justify-content: center; padding: 20px;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 15px; padding: 30px; max-width: 800px; max-height: 80vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2>${transcript.title || 'Untitled Video'}</h2>
+                        <button id="close-modal" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+                    </div>
+                    <p style="color: #666; margin-bottom: 20px;">${transcript.channelName || transcript.channel_name || 'Unknown Channel'} • ${formatDate(transcript.scrapedAt || transcript.scraped_at)}</p>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; line-height: 1.6;">
+                        ${(transcript.transcript || 'No transcript available').replace(/\n/g, '<br>')}
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal || e.target.id === 'close-modal') {
+                    document.body.removeChild(modal);
+                }
+            });
+        }
+
+        function downloadTranscript(transcript) {
+            const content = `${transcript.title || 'Untitled Video'}\n${transcript.channelName || transcript.channel_name || 'Unknown Channel'}\nScraped: ${formatDate(transcript.scrapedAt || transcript.scraped_at)}\n\n${transcript.transcript || 'No transcript available'}`;
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `transcript-${transcript.videoId || transcript.video_id || 'unknown'}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showMessage('Transcript downloaded', 'success');
+        }
+
+        function exportSelected() {
+            const selected = transcripts.filter(t => selectedTranscripts.has(t.videoId || t.video_id));
+            
+            if (selected.length === 0) {
+                showMessage('No transcripts selected', 'error');
+                return;
+            }
+            
+            const exportData = {
+                exportDate: new Date().toISOString(),
+                totalTranscripts: selected.length,
+                transcripts: selected
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `selected-transcripts-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showMessage(`Exported ${selected.length} transcripts`, 'success');
+        }
+
+        function copySelected() {
+            const selected = transcripts.filter(t => selectedTranscripts.has(t.videoId || t.video_id));
+            
+            if (selected.length === 0) {
+                showMessage('No transcripts selected', 'error');
+                return;
+            }
+            
+            const content = selected.map(t => 
+                `${t.title || 'Untitled Video'}\n${t.channelName || t.channel_name || 'Unknown Channel'}\n${t.transcript || 'No transcript available'}\n\n---\n`
+            ).join('\n');
+            
+            navigator.clipboard.writeText(content).then(() => {
+                showMessage(`Copied ${selected.length} transcripts to clipboard`, 'success');
+            }).catch(() => {
+                showMessage('Failed to copy transcripts', 'error');
+            });
+        }
+
+        function downloadSelected() {
+            const selected = transcripts.filter(t => selectedTranscripts.has(t.videoId || t.video_id));
+            
+            if (selected.length === 0) {
+                showMessage('No transcripts selected', 'error');
+                return;
+            }
+            
+            const content = selected.map(t => 
+                `${t.title || 'Untitled Video'}\n${t.channelName || t.channel_name || 'Unknown Channel'}\nScraped: ${formatDate(t.scrapedAt || t.scraped_at)}\n\n${t.transcript || 'No transcript available'}\n\n${'='.repeat(80)}\n`
+            ).join('\n');
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `selected-transcripts-${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showMessage(`Downloaded ${selected.length} transcripts`, 'success');
+        }
+
+        // Event listeners
+        loadBtn.addEventListener('click', loadTranscripts);
+        selectAllBtn.addEventListener('click', selectAll);
+        clearSelectionBtn.addEventListener('click', clearSelection);
+        exportSelectedBtn.addEventListener('click', exportSelected);
+        copySelectedBtn.addEventListener('click', copySelected);
+        downloadSelectedBtn.addEventListener('click', downloadSelected);
+
+        searchInput.addEventListener('input', (e) => {
+            renderTranscripts(e.target.value);
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTranscripts();
+        });
+    </script>
+</body>
+</html>
