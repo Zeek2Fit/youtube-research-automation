@@ -1,6 +1,6 @@
 # TubeAutomator - YouTube Research Automation
 
-A complete YouTube content research automation system for analyzing competitor videos, extracting transcripts, and generating optimized content scripts. Built with the [Mastra](https://mastra.ai) framework.
+*Testing* A complete YouTube content research automation system for analyzing competitor videos, extracting transcripts, and generating optimized content scripts. Built with the [Mastra](https://mastra.ai) framework.
 
 ## Features
 
