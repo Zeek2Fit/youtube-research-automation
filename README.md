@@ -1,0 +1,3 @@
+# YouTube Research Automation
+
+Initializing repository...
